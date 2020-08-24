@@ -1,0 +1,252 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r setup}
+if(!require(knitr)){install.packages("knitr", dependencies = TRUE)}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir = "C:/Users/West Liberty U/Desktop/Garrett_Hoover/Garrett_Hoover_thesis_documents")
+getwd()
+setwd("C:/Users/West Liberty U/Desktop/Garrett_Hoover/Garrett_Hoover_thesis_documents")
+```
+```{r}
+if(!require("installr")){install.packages("installr", dependencies = TRUE)}
+library(installr)
+updateR()
+install.packages("INLA", repos=c(getOption("repos"), INLA="https://inla.r-inla-download.org/R/testing"), dep=TRUE)
+```
+```{r}
+#Install what you need. I don't remember all the packages necessary to run the code, but if you run all of these packages
+#the code should run
+
+if(!require(nlme)){install.packages("nlme", dependencies = TRUE)}
+library(nlme)
+if(!require(MASS)){install.packages("MASS", dependencies = TRUE)}
+library(MASS)
+if(!require(MuMIn)){install.packages("MuMIn", dependencies = TRUE)}
+library(MuMIn)
+if(!require(lme4)){install.packages("lme4", dependencies = TRUE)}
+library(lme4)
+if(!require(ggplot2)){install.packages("ggplot2", dependencies = TRUE)}
+library(ggplot2)
+if(!require(dplyr)){install.packages("dplyr", dependencies = TRUE)}
+library(dplyr)
+if(!require(psych)){install.packages("psych", dependencies = TRUE)}
+library(psych)
+if(!require(usdm)){install.packages("usdm", dependencies = TRUE)}
+library(usdm)
+if(!require(lattice)){install.packages("lattice", dependencies = TRUE)}
+library(lattice)
+if(!require(car)){install.packages("car", dependencies = TRUE)}
+library(car)
+if(!require(MCMCglmm)){install.packages("MCMCglmm", dependencies = TRUE)}
+library(MCMCglmm)
+if(!require(vegan)){install.packages("vegan", dependencies = TRUE)}
+library(vegan)
+if(!require(grid)){install.packages("grid", dependencies = TRUE)}
+library(grid)
+if(!require(ggrepel)){install.packages("ggrepel", dependencies = TRUE)}
+library(ggrepel)
+if(!require(ggpubr)){install.packages("ggpubr", dependencies = TRUE)}
+library(ggpubr)
+if(!require(INLA)){install.packages("INLA", dependencies = TRUE)}
+library(INLA)
+if(!require(ggregplot)) devtools::install_github("gfalbery/ggregplot")
+library(ggregplot)
+if(!require(tidyverse)){install.packages("tidyverse", dependencies = TRUE)}
+library(tidyverse)
+if(!require(RColorBrewer)){install.packages("RColorBrewer", dependencies = TRUE)}
+library(RColorBrewer)
+
+pdoa <- read.csv("lm.csv")
+attach(pdoa)
+```
+#A tool to test for multicollinearity. The 'th' equates to the threshold of collinearity that is acceptable
+#in your predictor variables. It probably alright to leave it at '10'
+```{r}
+resp <- "NMS1"
+
+covar <- c("turb", 
+           "do", 
+           "ph", 
+           "cond",
+           "orp",
+           "cl",
+           "percent_dev",
+           "percent_forest",
+           "percent_ag",
+           "percent_dev_riparian",
+           "percent_forest_riparian",
+           "percent_ag_riparian") 
+```
+```{r}
+podf_2 <- data.frame(scale(temp),
+                     scale(turb), 
+                     scale(do), 
+                     scale(ph),
+                     scale(cond), 
+                     scale(orp),
+                     scale(cl),
+                     scale(percent_dev), 
+                     scale(percent_forest), 
+                     scale(percent_ag),
+                     scale(percent_dev_riparian), 
+                     scale(percent_forest_riparian),
+                     scale(percent_ag_riparian))
+
+podff_2 <- vifstep(podf_2, th = 10)
+podff_2
+```
+```{r}
+f0.2 <- as.formula(paste0(resp, " ~ ", 
+                          paste(covar, collapse = " + "), 
+                          " +  f(site, model = 'iid')")) # This is how you include  a typical random effect.
+```
+```{r}
+inla.setOption("enable.inla.argument.weights", TRUE)
+
+IM0.1  <- inla(NMS1 ~  scale(turb) + 
+                     scale(do) + 
+                     scale(ph) +
+                     scale(cond) + 
+                     scale(orp) +
+                     scale(cl) +
+                     scale(percent_dev) + 
+                     scale(percent_forest) + 
+                     scale(percent_ag) +
+                     scale(percent_dev_riparian) + 
+                     scale(percent_forest_riparian) +
+                     scale(percent_ag_riparian) +
+                     f(site, model = 'iid'),
+               family = "gaussian",
+               data = pdoa) 
+
+summary(IM0.1)
+
+Efxplot(list(IM0.1))
+```
+```{r}
+HostModelSel <- INLAModelSel(resp, covar, "site", "iid", "gaussian", pdoa)
+
+Finalcovar <- HostModelSel$Removed[[length(HostModelSel$Removed)]]
+```
+```{r}
+IM0.2  <- inla(NMS1 ~  scale(turb) + 
+                     scale(do) + 
+                     scale(ph) +
+                     scale(cond) + 
+                     scale(cl) +
+                     scale(percent_dev) + 
+                     scale(percent_forest) + 
+                     scale(percent_ag) +
+                     scale(percent_dev_riparian) + 
+                     scale(percent_forest_riparian) +
+                     scale(percent_ag_riparian) +
+                     f(site, model = 'iid'),
+               family = "gaussian",
+               data = pdoa, 
+               control.compute = list(dic = TRUE))
+
+summary(IM0.2)
+
+Efxplot(list(IM0.2))
+```
+#I've given you two different lines of code (lmer and glmm). They're both working with mixed effects (hierarchical) 
+#models where site or another grouping factor is included. I haven't run these lines of code in awhile though they 
+#should run still. If they don't feel free to contact me or try to figure it out on your own; either way. 
+#If you're running something other than mixed effects models like just a 'glm' utilize your base code along with what 
+#I have here. The codes should partially overlap.
+```{r}
+mcslmod_2m <-lmer(ibi ~ scale(cond) + 
+                    scale(do) + 
+                    scale(percent_ag) + 
+                    scale(percent_dev)
+                  + (1|huc_8_watershed) 
+                  ,data = pdoa,
+                  (REML = "FALSE"), na.action = "na.fail", control=lmerControl(optCtrl=list(maxfun=20000)))
+summary(mcslmod_2m)
+plot(mcslmod_2m)
+intervals(mcslmod_2m)
+r.squaredGLMM(mcslmod_2m)
+```
+#Dredge, Get.models, and model.avg is how you run the above global model (y ~ x1 + x2 + etc.) and 
+#then get the averaged coefficients of all smaller component models (y ~ x1; y ~ x1 + x3; etc.). This method will
+#also compare the 'best fit' between all models (global and components) and rank them based on AIC (maybe AICc).
+#If AICc isn't provided I think you can type in the code to get it 
+#(model.avg(get.models(pm_1, subset = TRUE, AICc = TRUE))) not exactly like this, but something like it.
+#You probably just want to use the subset = TRUE only. It utilizes all models, not just the top 5% like the other
+#line of code does.
+```{r}
+pm_1 <- dredge(mcslmod_2m)
+ggpm <- model.avg(get.models(pm_1, subset = TRUE))
+ddpm <- model.avg(get.models(pm_1, cumsum(weight) <= .95 ))
+summary(ggpm)
+summary(ddpm)
+confint(ggpm)
+confint(ddpm)
+```
+#The PQL stands for penalized quasi-likelihood which accounts for overdispersion in count data. Though it may be
+#useful if you do any count modeling
+
+PiQL_1 <- glmmPQL(podo_health ~ scale(cc_den)*scale(sub_size) +
+                    scale(fv_two_proportion)*scale(water_depth) +
+                    scale(fv_two_proportion)*scale(cc_den) +
+                    scale(fv_two_proportion)*scale(sub_size) +
+                    scale(water_depth)*scale(cc_den) +
+                    scale(water_depth)*scale(sub_size) +
+                    scale(fv_two_proportion) +
+                    scale(water_depth) + 
+                    scale(cc_den) + 
+                    scale(sub_size) + 
+                    scale(sp_con) +
+                    scale((10)^(-pH)) +
+                    scale(orp) +
+                    scale(manganese) +
+                    scale(do_con) +
+                    scale(hardness) +
+                    scale(sulfate), 
+                  random =  ~1 | site, 
+                  family = quasipoisson (link = "log"),
+                  data = pdoa, verbose = FALSE, control=glmerControl(optCtrl=list(maxfun=20000)))
+summary(PiQL_1)
+plot(PiQL_1)
+intervals(PiQL_1)
+r.squaredGLMM(PiQL_1)
+
+
+PiQL_1_1 <- dredge(PiQL_1)
+ggpm_PiQL_1_1 <- model.avg(get.models(PiQL_1_1, subset = TRUE))
+ddpm_PiQL_1_1 <- model.avg(get.models(PiQL_1_1, cumsum(weight) <= .95 ))
+summary(ggpm_PiQL_1_1)
+summary(ddpm_PiQL_1_1)
+confint(ggpm_PiQL_1_1)
+confint(ddpm_PiQL_1_1)
+
+
+prior.m3 <- list(
+  R=list(V=1, n=1, fix=1),
+  G=list(G1=list(V        = diag(1),
+                 n        = 1,
+                 alpha.mu = rep(0, 1),
+                 alpha.V  = diag(1)*25^2)))
+mcmc.updateable <- updateable(MCMCglmm)
+
+p1 <- mcmc.updateable(biomass ~ scale(cond) + 
+                        scale(do) + 
+                        scale(percent_ag) + 
+                        scale(percent_dev) +
+                        scale(temp) +
+                        scale(ph) +
+                        scale(turb), 
+                      random = ~site, data=pdoa, 
+                      family = "gaussian", prior= prior.m3,verbose=FALSE,
+                      nitt=6000, burnin=1000, thin=5, DIC = TRUE)
+
+summary(p1)
+plot(p1)
+
+mcp_1_1 <- dredge(p1, rank = "DIC")
+mcp_1_ag <- model.avg(get.models(mcp_1_1, subset = TRUE))
+summary(mcp_1_ag)
+```
