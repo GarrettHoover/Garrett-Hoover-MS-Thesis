@@ -1,0 +1,34 @@
+---
+title: Step AIC
+author: Garrett Hoover, West Liberty University
+---
+
+Step AIC
+
+```{r setup}
+if(!require(knitr)){install.packages("knitr", dependencies = TRUE)}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir = "C:/Users/West Liberty U/Desktop/Garrett_Hoover/Garrett_Hoover_thesis_documents")
+getwd()
+setwd("C:/Users/West Liberty U/Desktop/Garrett_Hoover/Garrett_Hoover_thesis_documents")
+```
+
+```{r}
+if(!require(MASS)){install.packages("MASS", dependencies = TRUE)}
+library(MASS)
+
+lm <- read.csv("lm.csv")
+
+global_mod <- lm(ibi ~ temp + turb + do + ph + cond + percent_dev + percent_ag, data = lm) 
+step_mod <- stepAIC(global_mod)
+
+global_mod <- lm(biomass ~ temp + turb + do + ph + cond + percent_dev + percent_ag, data = lm) 
+step_mod <- stepAIC(global_mod)
+
+global_mod <- lm(ibi ~ temp + turb + do + ph + cond + percent_dev_riparian + percent_ag_riparian, data = lm) 
+step_mod <- stepAIC(global_mod)
+
+global_mod <- lm(biomass ~ temp + turb + do + ph + cond + percent_dev_riparian + percent_ag_riparian, data = lm)
+step_mod <- stepAIC(global_mod)
+```

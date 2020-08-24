@@ -1,0 +1,103 @@
+---
+title: Normality testing & Collinearity Assessment
+author: Garrett Hoover, West Liberty University
+---
+
+```{r setup}
+if(!require(knitr)){install.packages("knitr", dependencies = TRUE)}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir = "C:/Users/West Liberty U/Desktop/Garrett_Hoover/Garrett_Hoover_thesis_documents")
+getwd()
+setwd("C:/Users/West Liberty U/Desktop/Garrett_Hoover/Garrett_Hoover_thesis_documents")
+```
+
+Normality Testing
+
+```{r}
+if(!require(ggplot2)){install.packages("ggplot2", dependencies = TRUE)}
+library(ggplot2)
+if(!require(dplyr)){install.packages("dplyr", dependencies = TRUE)}
+library(dplyr)
+if(!require(psych)){install.packages("psych", dependencies = TRUE)}
+library(psych)
+if(!require(usdm)){install.packages("usdm", dependencies = TRUE)}
+library(usdm)
+if(!require(conflicted)){install.packages("conflicted", dependencies = TRUE)}
+library(conflicted)
+
+conflict_prefer("select", "dplyr")
+
+water_chemistry_transform <- read.csv("water_chemistry_transform.csv")
+
+water_chemistry_transform1 <- select(water_chemistry_transform, temp, turb, ph, do, cond)
+
+boxplot(water_chemistry_transform1$temp)
+hist(water_chemistry_transform1$temp)
+qqnorm(water_chemistry_transform1$temp)
+qqline(water_chemistry_transform1$temp)
+shapiro.test(water_chemistry_transform1$temp)
+
+boxplot(water_chemistry_transform1$turb)
+hist(water_chemistry_transform1$turb)
+qqnorm(water_chemistry_transform1$turb)
+qqline(water_chemistry_transform1$turb)
+shapiro.test(water_chemistry_transform1$turb)
+
+boxplot(water_chemistry_transform1$do)
+hist(water_chemistry_transform1$do)
+qqnorm(water_chemistry_transform1$do)
+qqline(water_chemistry_transform1$do)
+shapiro.test(water_chemistry_transform1$do)
+
+boxplot(water_chemistry_transform1$ph)
+hist(water_chemistry_transform1$ph)
+qqnorm(water_chemistry_transform1$ph)
+qqline(water_chemistry_transform1$ph)
+shapiro.test(water_chemistry_transform1$ph)
+
+boxplot(water_chemistry_transform1$cond)
+hist(water_chemistry_transform1$cond)
+qqnorm(water_chemistry_transform1$cond)
+qqline(water_chemistry_transform1$cond)
+shapiro.test(water_chemistry_transform1$cond)
+```
+
+Collinearity Assessment
+
+```{r}
+if(!require(dplyr)){install.packages("dplyr", dependencies = TRUE)}
+library(dplyr)
+if(!require(psych)){install.packages("psych", dependencies = TRUE)}
+library(psych)
+if(!require(usdm)){install.packages("usdm", dependencies = TRUE)}
+library(usdm)
+if(!require(usdm)){install.packages("usdm", dependencies = TRUE)}
+library(usdm)
+if(!require(conflicted)){install.packages("conflicted", dependencies = TRUE)}
+library(conflicted)
+
+conflict_prefer("select", "dplyr")
+
+water_chemistry_transform <- read.csv("water_chemistry_transform.csv")
+chemcor <- select(water_chemistry_transform, temp, turb, ph, do, cond)
+corr.test(chemcor, y = NULL, method = "spearman")
+pairs(chemcor)
+spearman <- vifstep(chemcor, th = 10)
+spearman
+
+landcover_transform_watershed <- read.csv("landcover_transform_watershed.csv")
+landcor_watershed <- select(landcover_transform_watershed, percent_dev, percent_forest, percent_ag)
+corr.test(landcor_watershed, y = NULL, method = "pearson")
+pairs(landcor_watershed)
+pearson <- vifstep(landcor_watershed, th = 10)
+pearson
+
+landcover_transform_riparian <- read.csv("landcover_transform_riparian.csv")
+landcor_riparian <- select(landcover_transform_riparian, percent_dev_riparian, percent_forest_riparian,
+                  percent_ag_riparian)
+corr.test(landcor_riparian, y = NULL, method = "pearson")
+pairs(landcor_riparian)
+pearson <- vifstep(landcor_riparian, th = 10)
+pearson
+```
