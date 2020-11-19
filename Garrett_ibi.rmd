@@ -1,0 +1,455 @@
+---
+title: "PAIBI"
+output: html_notebook
+editor_options: 
+chunk_output_type: inline
+---
+
+```{r setup}
+if(!require(knitr)){install.packages("knitr", dependencies = TRUE)}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir = "C:/Users/West Liberty U/Desktop/Garrett_Hoover/Garrett_Hoover_thesis_documents")
+getwd()
+setwd("C:/Users/West Liberty U/Desktop/Garrett_Hoover/Garrett_Hoover_thesis_documents")
+```
+```{r}
+if(!require(dplyr)){install.packages("dplyr", dependencies = TRUE)}
+if(!require(tidyr)){install.packages("tidyr", dependencies = TRUE)}
+if(!require(readxl)){install.packages("readxl", dependencies = TRUE)}
+if(!require(writexl)){install.packages("writexl", dependencies = TRUE)}
+if(!require(conflicted)){install.packages("conflicted", dependencies = TRUE)}
+
+library ("conflicted")
+library ("dplyr")
+library("tidyr")
+library("readxl")
+library("writexl")
+
+conflict_prefer("filter", "dplyr")
+
+sessionInfo()
+
+#Designated Use Codes
+use <-data.frame(INT_USE_GEN_ID=c(1:8, 21), 
+                    STR_USE_CODE=c("CWF", "EV", "HQ", "HQ-CWF", "HQ-TSF", "HQ-WWF", "TSF", "WWF", "N/A"),
+                    STR_USE_DESCRIPTION=c("CWF(COLD WATER FISHES)", "EV(EXCEPTIONAL VALUE)", "HQ(HIGH QUALITY)", "HQ-CWF(HIGH QUALITY-COLD WATER FISHES", "HQ-TSF(HIGH QUALITY-TROUT STOCKING)", "HQ-WWF(HIGH QUALITY-WARM WATER
+                                          FISHES)", "TSF(TROUT STOCKING)", "WWF(WARM WATER FISHES)", "Missing from Chapter 93"))
+
+use<- read_excel("SLIMS_DBA_MI_BUG_CODES_LUT.XLSX",2)
+
+#Taxa Table
+lut <- read_excel("SLIMS_DBA_MI_BUG_CODES_LUT.XLSX",1)
+```
+This code was written by Lou Reynolds and Leah Ettema - USEPA
+reynolds.louis@epa.gov  ettema.leah@epa.gov
+Contact us with problems or questions.
+
+Make an attribute table to compute metrics.
+The basis of this is the "SLIMS_DBA_MI_BUG_CODES_LUT.XLSX"
+This table was supplied by PADEP in Feb 2018.
+
+```{r Construct Attribute Table}
+str(lut)
+
+conflict_prefer("select", "stats")
+#These lines create the basis for any metrics one might want based on traits 
+rtax <- lut %>% 
+  mutate(hilsid0=ifelse(INT_HILS_ID_LEVEL==0,1,0),
+         hilsid1=ifelse(INT_HILS_ID_LEVEL==1,1,0),
+         hilsid2=ifelse(INT_HILS_ID_LEVEL==2,1,0),
+         hilsid3=ifelse(INT_HILS_ID_LEVEL==3,1,0),
+         hilsid4=ifelse(INT_HILS_ID_LEVEL==4,1,0),
+         hilsid5=ifelse(INT_HILS_ID_LEVEL==5,1,0),
+         hilsid6=ifelse(INT_HILS_ID_LEVEL==6,1,0),
+         hilsid7=ifelse(INT_HILS_ID_LEVEL==7,1,0),
+         hilsid8=ifelse(INT_HILS_ID_LEVEL==8,1,0),
+         hilsid9=ifelse(INT_HILS_ID_LEVEL==9,1,0),
+         hilsid10=ifelse(INT_HILS_ID_LEVEL==10,1,0),
+         #sensitive ept
+         e=ifelse(INT_BUG_CODE >= 1020000000&INT_BUG_CODE <= 1029999999&INT_HILS_ID_LEVEL<=4,1,0),
+         p=ifelse(INT_BUG_CODE >= 1040000000&INT_BUG_CODE <= 1049999999&INT_HILS_ID_LEVEL<=4,1,0),
+         t=ifelse(INT_BUG_CODE >= 1080000000&INT_BUG_CODE <= 1089999999&INT_HILS_ID_LEVEL<=4,1,0),
+         ept=ifelse(e+p+t>0,1,0), #all sensitive ept
+         sens=ifelse(INT_HILS_ID_LEVEL<=3,1,0),#sesitive taxa
+         bcg123sm=ifelse(INT_BCG_COLD<=3&INT_BCG_COLD>0,1,0),
+         bcg456sm=ifelse(INT_BCG_COLD>=4,1,0),
+         bcg123lg=ifelse(INT_BCG_WARM<=3&INT_BCG_WARM>0,1,0),
+         bcg456lg=ifelse(INT_BCG_WARM>=4,1,0),
+         eall = ifelse(INT_BUG_CODE >= 1020000000&INT_BUG_CODE <= 1029999999,1,0),
+         pall = ifelse(INT_BUG_CODE >= 1040000000&INT_BUG_CODE <= 1049999999,1,0),
+         tall = ifelse(INT_BUG_CODE >= 1080000000&INT_BUG_CODE <= 1089999999,1,0), #ALL EPT
+         eptall = ifelse(eall+pall+tall>0,1,0),
+         mayfly = ifelse(eall==1,1,0), #Mayfly Present/Absent
+         leuctra_amphi = ifelse(STR_TAXA_NAME=="Leuctra"|STR_TAXA_NAME=="Amphinemura",1,0))
+
+#Put rtax into "long" or stacked form - gather - to compute totals
+rtaxl <- rtax %>% 
+  dplyr::select(STR_TAXA_NAME,hilsid0,hilsid1,hilsid2,hilsid3,hilsid4,hilsid5,hilsid6,hilsid7,hilsid8,hilsid9,hilsid10,ept,sens,bcg123sm,bcg456sm,bcg123lg,bcg456lg,eall,pall,tall,eptall,mayfly,leuctra_amphi) %>% 
+  filter(!is.na(STR_TAXA_NAME)) %>% 
+  gather(key=metric, value=metric_val, -STR_TAXA_NAME) %>% 
+  filter(metric_val>0) #%>% 
+  #distinct() %>% #Gets rid of all duplicates such as Chironomidae
+  #filter(STR_TAXA_NAME=="Chironomidae")
+
+```
+
+Input Data
+This R code assumes that bug data is in the form of 
+SampleID  taxaname  COUNT
+The taxa name should be renamed to STR_TAXA_NAME
+
+There also needs to be separate Station Info data
+
+SampleID month WSA  INT_USE_GEN_ID  BaselineIBI 
+
+SampleID=common field with the bug data
+month=numerical month that sample collected (1-12)
+WSA=watershed area in Square Miles
+INT_USE_GEN_ID=Use ID as in table use
+BaselineIBI=past IBI if there is one.  NA if not
+
+The raw data may not have met the total number of individuals requirements of the PAIBI.  A subsampling routine was added in this event for situations where the total number of individuals is >240.
+
+  NOTE: This is dummied data - it only exists as an example and to test the code.
+
+To obtain month/year from a consistently formated sample ID, use something like: 
+  separate(SampleID, into=c("year","rest"), sep=2,remove=FALSE) %>% 
+  separate(rest, into=c("month","rest1"), sep=2,remove=FALSE) %>%
+  select(-rest, -rest1) 
+
+```{r Input data}
+
+#Read in Raw data
+bugdat <- read_excel("bugs_year2.xlsx",sheet="samples")
+bugsta <- read_excel("bugs_year2.xlsx",sheet="stations")
+      
+# This little bit accounts for multiple STR_ID's in a sample
+#- e.g. Lumbriculidae, etc.
+bugdat <-bugdat %>% 
+  group_by(SampleID,STR_TAXA_NAME) %>% 
+  summarise (totn = sum(Count)) %>% 
+  ungroup()
+
+#This removes ID's only to Diptera
+bugdat<-bugdat %>%
+  filter(STR_TAXA_NAME!="Diptera")
+
+#Subsample if needed--------
+
+#Total number of individuals per sample
+bugtotalsraw <- bugdat %>% 
+  group_by(SampleID) %>% 
+  summarise(bugtotalraw=sum(totn)) %>%  
+  dplyr::select(SampleID, bugtotalraw) #bugtotal is total
+
+#Table displaying sampleID's with unusual counts (outside of 160-240).
+SampleSizeWarning<- bugtotalsraw %>% 
+  filter(bugtotalraw>240 | bugtotalraw < 160)
+
+#When bug total is greater than 240, random sample down to 200
+LargeSample<-SampleSizeWarning %>%
+  filter(bugtotalraw>240) 
+
+#LS=Large Sample
+LS <- left_join(LargeSample,bugdat,by="SampleID")  
+LSrow<-nrow(LS)
+
+for(s in 1:LSrow) #this loop copies and pastes a new row totn-1 number of times, making a unique row for each individual taxa
+{
+  if (LS$totn[s]>1)
+  {
+    reps=LS$totn[s]-1 #number of individuals per STR_TAXA_NAME -1
+    for (t in 1:reps)
+    {
+      LS<-rbind(LS, LS[s,]) #paste the row "reps" number of times
+    }
+  }
+} #totn is now meaningless (should be 1 for each row), but will delete in next select()
+as.tbl(LS) #need this for sample_n function
+LSnew <- LS %>%
+  group_by(SampleID) %>%
+  dplyr::select(-totn, -bugtotalraw)  %>%
+  sample_n(240, replace=FALSE) #randomly selects 240 rows (individuals) for each SampleID
+
+LSnewsum1<-LSnew %>%  #recounting (summarizing and collapsing) the number of each taxa per sampleID
+  group_by(SampleID, STR_TAXA_NAME) %>%
+  summarise(totn=n()) %>%
+  mutate(subsamp=as.character("Y")) #These SampleID's were subsampled
+
+#Making bugdat table for analysis, with subsampled data and column indicating it was subsampled 
+samplematch<-bugdat$SampleID  %in%  LSnewsum1$SampleID #creating T/F vector: if Subsampled Sample ID's = Sample ID's in bugdat, True means SampleID was subsampled
+
+bugdatn <- bugdat %>% #making columns match for bind
+  mutate(subsamp=as.character("N")) #indicating not subsampled
+
+bugdatn<-bugdatn[!samplematch,] #delete rows that were subsampled (select only rows that do not have matches with subsampled SampleIDs)
+bugdat<-bind_rows(bugdatn, LSnewsum1) #merge rows with the new counts that were subsampled
+
+subsamp<-bugdat %>%
+  select(SampleID, subsamp) 
+#will paste on to IBI score Final
+subsamp<-unique(subsamp) 
+################end subsampling #########
+
+```
+
+The following are all calculations for PAIBI metrics
+
+```{r PAIBI calculations}
+#Total number of individuals per sample
+bugtotals <- bugdat %>% 
+  group_by(SampleID) %>% 
+  summarise(bugtotal=sum(totn)) %>% 
+  select(SampleID, bugtotal)
+
+#Put the bug data together with the Traits
+
+bugxtax <- left_join(bugdat,rtaxl,by="STR_TAXA_NAME") 
+
+#a few QA checks  Feel free to add more...
+QA_bySample <- bugxtax %>% 
+  left_join(bugtotals, by="SampleID") %>% 
+   arrange(SampleID, metric)
+
+QA_nannies<- bugxtax %>%  ###check of missing values
+  filter(is.na(metric))
+
+bugxtax <- bugxtax %>%  ##Remove metrics with NA values
+  filter(!is.na(metric))
+names(bugxtax)
+
+#bug names that are in the sample but not the LUT
+missingbugs<-bugdat$STR_TAXA_NAME %in% lut$STR_TAXA_NAME
+missingbugs<-bugdat[missingbugs==FALSE,]
+
+write_xlsx(list(SampleMetricQANA=QA_nannies, SampleSizeWarning=SampleSizeWarning, BugsnotinLUT=missingbugs), "Bugdat_QA.xlsx")
+
+#Preparing for metric calculations
+ #Metrich = taxa richness of each metric by sample
+ #Metsum = number of individuals per metric by sample 
+met1 <- bugxtax %>%
+  group_by(SampleID, metric) %>% 
+  summarise(Metrich=length(totn), Metsum=sum(totn)) %>% 
+  ungroup()
+
+ #Metprop=proprotion of individuals in the sample with that metric  
+met2 <- left_join (met1, bugtotals, by="SampleID") %>% 
+  mutate(Metprop=Metsum/bugtotal)
+
+#The following are the IBI metrics 
+
+#Total Richness
+rich <- bugdat %>% 
+  group_by(SampleID) %>% 
+  summarise(Richness=n_distinct(STR_TAXA_NAME))
+
+#Sensitive EPT
+eptrich <- met2 %>%
+  filter(metric=="ept") %>% 
+  group_by(SampleID) %>% 
+  summarise(eptR=Metrich)#  changed from sum(Metrich) (made no difference really)
+
+#To calculate Becks Index, the metrics need to be put into wide form - spread
+becks <- met2 %>%
+  select(-Metsum,-bugtotal,-Metprop) %>% 
+  spread(metric,Metrich) 
+
+becks[is.na(becks)] <- 0 #Replace NANs in table with zeros
+
+becks <- becks %>% 
+  mutate(becksindex=(3*hilsid0+2*hilsid1+1*hilsid2)) %>% 
+  select(SampleID,becksindex)
+
+#Hisenhoff Index
+
+#Hilsenhoff Index taxa info
+hiltax <- rtax %>% 
+  select(STR_TAXA_NAME, INT_HILS_ID_LEVEL) %>% 
+  ##distinct() %>% #Gets rid of all duplicates such as Chironomidae
+  filter(!is.na(INT_HILS_ID_LEVEL))# Gets rid of NA's in list
+
+#Raw Calculations for Hilsenhoff Index and Shannon Diversity  
+hils <- bugdat %>% 
+  left_join(hiltax) %>% 
+  group_by(SampleID)%>% 
+  mutate(nxa=totn*INT_HILS_ID_LEVEL, sumn=sum(totn))
+  
+#Hilsenhoff Index
+hilsindx <- hils %>% 
+  group_by(SampleID) %>% 
+  summarise(hilsindex=sum(nxa)/mean(sumn))
+  
+#Shannon Diversity
+shandiv <- hils %>%
+  mutate(pi=totn/sumn,lnpi=log(pi),pilnpi=pi*lnpi) %>% 
+  group_by(SampleID) %>% 
+  summarise(shdv=-sum(pilnpi))
+
+#Percent Sensitive Individuals
+psens <- met2 %>%
+  select(SampleID, metric, Metprop) %>% 
+  filter(metric=="sens") %>% 
+  mutate(psen=Metprop*100) %>% 
+  select(SampleID, psen)
+
+#all ept
+allept <- met2 %>% 
+  filter (metric=="eptall") %>% 
+  group_by(SampleID) %>% 
+  mutate(allept=Metrich)
+
+#Put all the tables together
+ibi_1 <- left_join(rich,eptrich) %>%  
+  left_join(becks) %>% 
+  left_join(hilsindx) %>% 
+  left_join(shandiv) %>% 
+  left_join(psens)
+  
+ibi_1$psen<-replace(ibi_1$psen, which(is.na(ibi_1$psen)), as.numeric(0)) #if there are no sensitive taxa, change NA to 0
+ibi_1$eptR<-replace(ibi_1$eptR, which(is.na(ibi_1$eptR)), as.numeric(0)) #if there are no ept taxa, change NA to 0
+
+ibi <- left_join(ibi_1,bugsta, by = "SampleID") %>% 
+  #left_join (gates, by="SampleID") %>% 
+  left_join (use, by="INT_USE_GEN_ID")
+
+ibi$season <- ifelse(ibi$month >=6& ibi$month <= 9, "summer",
+                       ifelse(ibi$month>=11| ibi$month <=5,"winter",
+                              ifelse(ibi$month ==10,"bpj","NA")))
+ibi$size <- ifelse(ibi$WSA <=25,"small", "large")
+
+###IBI is scored to different standard values according to Watershed Area.
+#small is <25 square miles and large is >50 square miles.
+#PADEP scores them both and the biologists decide which to apply to streams between 25-50.
+
+#This function truncates scores to fall between 0-100
+truncfxn <- function(x){ifelse(x>=100,100,x)}
+#compute IBI scores
+ibiscore_final <- ibi %>%
+  mutate(sc_sm_Richness=truncfxn((Richness/33)*100),
+         sc_sm_eptR=truncfxn((eptR/19)*100),
+         sc_sm_becks=truncfxn((becksindex/38)*100),
+         sc_sm_hils=truncfxn(((10-hilsindex)/(10-1.89))*100),
+         sc_sm_shdv=truncfxn((shdv/2.86)*100),
+         sc_sm_psen=truncfxn((psen/84.5)*100),
+         ibi_sm=(sc_sm_Richness+sc_sm_eptR+sc_sm_becks+sc_sm_hils+sc_sm_shdv+sc_sm_psen)/6) %>% 
+  mutate(sc_lg_Richness=truncfxn((Richness/31)*100),
+         sc_lg_eptR=truncfxn((eptR/16)*100),
+         sc_lg_becks=truncfxn((becksindex/22)*100),
+         sc_lg_hils=truncfxn(((10-hilsindex)/(10-3.05))*100),
+         sc_lg_shdv=truncfxn((shdv/2.86)*100),
+         sc_lg_psen=truncfxn((psen/66.7)*100),
+         ibi_lg=(sc_lg_Richness+sc_lg_eptR+sc_lg_becks+sc_lg_hils+sc_lg_shdv+sc_lg_psen)/6) %>% 
+  mutate(BaselineIBI=(ifelse(is.na(BaselineIBI),ibi_sm,BaselineIBI))) #Baseline IBI score added if it exists, if not, small stream IBI score used
+
+#add subsamp column to IBIscore_final
+ibiscore_final <- full_join(ibiscore_final, subsamp, by="SampleID")
+
+names(ibiscore_final)
+``` 
+
+The following is preparation for the gates (othgate calculations below). 
+
+Gates are questions used in the PADEP flowchart to determine impairment.
+
+Following calculation of the gate endpoints, attainment decisions can be made.  
+
+```{R Gates from the Flow Chart}
+#Gate 1
+#Are mayflies, stoneflies, or caddislfies absent from the sub-sample?
+ept_pa <- met2 %>% 
+  filter(metric%in%c("eall", "pall","tall")) %>% 
+  select(SampleID,metric,Metrich) %>% 
+  spread(metric,Metrich) %>% 
+  mutate(eall=replace(eall,which(is.na(eall)),0),
+         pall=replace(pall,which(is.na(pall)),0),
+         tall=replace(tall,which(is.na(tall)),0),
+         ept_pa = ifelse(eall>=1&pall>=1&tall>=1,1,0)) %>% 
+  select(SampleID, ept_pa)
+
+#Gate 3 
+#Is the ratio of BCG attribute 1,2,3 taxa to BCG attribute 4,5,6 taxa<0.75 
+
+bcg_rich <- met2 %>% #This calculates the bcg richness ratios
+  select(SampleID, metric, Metrich) %>% 
+  filter(metric %in% c("bcg123sm","bcg456sm","bcg123lg","bcg456lg")) %>% 
+  spread(metric,Metrich) %>% 
+  mutate(bcgr_sm=bcg123sm/bcg456sm,
+         bcgr_lg=bcg123lg/bcg456lg) %>% 
+  select(SampleID, bcgr_sm,bcgr_lg)
+
+bcg_ind <- met2 %>% #This calculates the bcg individuals ratios
+  select(SampleID, metric, Metsum) %>% 
+  filter(metric %in% c("bcg123sm","bcg456sm","bcg123lg","bcg456lg")) %>% 
+  spread(metric,Metsum) %>% 
+  mutate(bcgi_sm=bcg123sm/bcg456sm,
+         bcgi_lg=bcg123lg/bcg456lg) %>% 
+  select(SampleID, bcgi_sm,bcgi_lg)
+
+#Gate 4
+#Does the sub-sample show signatures of acidification year-round.  (i.e. <3 mayfly taxa)
+# with mayflies representing <5% and Leuctra+Amphinemura representing >25% of individuals in the sub-sample?
+acid1 <- met2 %>% 
+  select(SampleID,metric,Metrich,Metprop) %>% 
+  filter(metric %in% c("mayfly")) %>% 
+  mutate (mayflyrich=Metrich, mayflypr=Metprop) %>% 
+  select (-metric,-Metrich,-Metprop)
+
+acid2 <- met2 %>% 
+  select (SampleID,metric,Metprop) %>% 
+  filter(metric %in% c("leuctra_amphi")) %>% 
+  group_by(SampleID) %>% 
+  summarise(leucamph_pa=sum(Metprop)) 
+  
+
+gates <- left_join(ept_pa,bcg_ind) %>% 
+  left_join(bcg_rich) %>% 
+  left_join(acid1) %>% 
+  left_join(acid2) %>% 
+  mutate(leucamph_pa=replace(leucamph_pa,which(is.na(leucamph_pa)),0)) 
+
+#Attainment of EV and HQ Waters
+ibiscore_final <- ibiscore_final %>% #Impairment decisions for Exceptional Value and High Quality waters
+mutate(hqevcut_sm = ibi_sm-BaselineIBI,
+       hqevcut_lg = ibi_lg-BaselineIBI,
+       #creating 3 columns based on stream size and season; user decides which is appropriate
+       hqevw_wsm_attdec = ifelse(ibi_sm >=63 & hqevcut_sm <=11, "attains", 
+                                "impaired"), #winter small stream (wsm)
+       hqevw_wlg_attdec = ifelse(ibi_sm >=63 & hqevcut_lg <=11, "attains", 
+                                "impaired"), #winter large stream (wlg)
+       hqevw_s_attdec = "resample") #any sized stream in summer
+
+#Attainment decisions for other use waters
+ibiscore_final <- ibiscore_final %>%
+  left_join (gates, by="SampleID") %>%
+  #assigned 1 if attaining, 0 if not
+  mutate(othgate_ept_lg=ifelse(ept_pa>=1,1,0),
+         othgate_becksen_lg=ifelse(sc_lg_becks>=33.3 & sc_lg_psen>=25, 1,0),
+         othgate_bcg_lg=ifelse(bcgr_lg>=0.75 & bcgi_lg>=0.75, 1, 0),
+         othgate_acid_lg=ifelse(mayflyrich>3 & mayflypr>0.05 & leucamph_pa<0.25,1,0),
+         othgateall_lg=(othgate_ept_lg+othgate_becksen_lg+othgate_bcg_lg+othgate_acid_lg)) %>% 
+  mutate(othgate_ept_sm=ifelse(ept_pa>=1,1,0),
+         othgate_becksen_sm=ifelse(sc_sm_becks>=33.3 & sc_sm_psen>=25, 1,0),
+         othgate_bcg_sm=ifelse(bcgr_sm>=0.75 & bcgi_sm>=0.75, 1, 0),
+         othgate_acid_sm=ifelse(mayflyrich>3 & mayflypr>=0.05 & leucamph_pa<0.25,1,0),
+         othgateall_sm=(othgate_ept_sm+othgate_becksen_sm+othgate_bcg_sm+othgate_acid_sm))
+
+#if the IBI score passes and all 4 gates, the site attains
+ibiscore_final <- ibiscore_final %>% 
+mutate(othwlg_attdec=ifelse(ibi_lg>=50 & othgateall_lg==4, "attains", "impaired"), #winter large
+       othslg_attdec=ifelse(ibi_lg>=43 & othgateall_lg==4, "attains", "impaired"), #summer large
+       othwsm_attdec=ifelse(ibi_sm>=50 & othgateall_sm==4, "attains", "impaired"), #winter small
+       othssm_attdec=ifelse(ibi_sm>=43 & othgateall_sm==4, "attains", "impaired")) #summer small
+
+#output attainment decision points for all contingencies
+attains <- ibiscore_final %>% 
+  select(SampleID,STR_USE_CODE,WSA,season, size, ibi_sm, ibi_lg, hqevw_wsm_attdec,hqevw_wlg_attdec, hqevw_s_attdec,othwlg_attdec,othslg_attdec,
+         othwsm_attdec,othssm_attdec)
+
+#Output to XLSX.  
+#Modify code to output any table in work env. to a worksheet 
+#list(worksheetname=tablname,...)
+write_xlsx(list(paibi_sc=ibiscore_final, pa_ibi_attain=attains),"PAibi.xlsx") 
+
+```
+

@@ -1,0 +1,378 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+if(!require("installr")){install.packages("installr", dependencies = TRUE)}
+library(installr)
+updateR()
+if(!require("INLA")){install.packages("INLA", repos=c(getOption("repos"), INLA="https://inla.r-inla-download.org/R/testing"), dep=TRUE)}
+library(INLA)
+```
+
+```{r setup}
+if(!require(knitr)){install.packages("knitr", dependencies = TRUE)}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir = "C:/Users/West Liberty U/Desktop/Garrett_Hoover/Garrett_Hoover_thesis_documents")
+getwd()
+setwd("C:/Users/West Liberty U/Desktop/Garrett_Hoover/Garrett_Hoover_thesis_documents")
+```
+```{r}
+#Install what you need. I don't remember all the packages necessary to run the code, but if you run all of these packages
+#the code should run
+
+if(!require(nlme)){install.packages("nlme", dependencies = TRUE)}
+library(nlme)
+if(!require(MASS)){install.packages("MASS", dependencies = TRUE)}
+library(MASS)
+if(!require(MuMIn)){install.packages("MuMIn", dependencies = TRUE)}
+library(MuMIn)
+if(!require(lme4)){install.packages("lme4", dependencies = TRUE)}
+library(lme4)
+if(!require(ggplot2)){install.packages("ggplot2", dependencies = TRUE)}
+library(ggplot2)
+if(!require(dplyr)){install.packages("dplyr", dependencies = TRUE)}
+library(dplyr)
+if(!require(psych)){install.packages("psych", dependencies = TRUE)}
+library(psych)
+if(!require(usdm)){install.packages("usdm", dependencies = TRUE)}
+library(usdm)
+if(!require(lattice)){install.packages("lattice", dependencies = TRUE)}
+library(lattice)
+if(!require(car)){install.packages("car", dependencies = TRUE)}
+library(car)
+if(!require(MCMCglmm)){install.packages("MCMCglmm", dependencies = TRUE)}
+library(MCMCglmm)
+if(!require(vegan)){install.packages("vegan", dependencies = TRUE)}
+library(vegan)
+if(!require(grid)){install.packages("grid", dependencies = TRUE)}
+library(grid)
+if(!require(ggrepel)){install.packages("ggrepel", dependencies = TRUE)}
+library(ggrepel)
+if(!require(ggpubr)){install.packages("ggpubr", dependencies = TRUE)}
+library(ggpubr)
+if(!require(INLA)){install.packages("INLA", dependencies = TRUE)}
+library(INLA)
+if(!require(ggregplot)) devtools::install_github("gfalbery/ggregplot")
+library(ggregplot)
+if(!require(tidyverse)){install.packages("tidyverse", dependencies = TRUE)}
+library(tidyverse)
+if(!require(snow)){install.packages("snow", dependencies = TRUE)}
+library(snow)
+if(!require(parallel)){install.packages("parallel", dependencies = TRUE)}
+library(parallel)
+if(!require(landscapemetrics)){install.packages("landscapemetrics", dependencies = TRUE)}
+library(landscapemetrics)
+if(!require(rgdal)){install.packages("rgdal", dependencies = TRUE)}
+library(rgdal)
+#if(!require(GARPTools)){install.packages("GARPTools", dependencies = TRUE)}
+#library(GARPTools)
+if(!require(maps)){install.packages("maps", dependencies = TRUE)}
+library(maps)
+if(!require(sp)){install.packages("sp", dependencies = TRUE)}
+library(sp)
+if(!require(rgeos)){install.packages("rgeos", dependencies = TRUE)}
+library(rgeos)
+if(!require(maptools)){install.packages("maptools", dependencies = TRUE)}
+library(maptools)
+if(!require(rgeos)){install.packages("rgeos", dependencies = TRUE)}
+library(rgeos)
+if(!require(mapdata)){install.packages("mapdata", dependencies = TRUE)}
+library(mapdata)
+if(!require(gbm)){install.packages("gbm", dependencies = TRUE)}
+library(gbm)
+if(!require(dismo)){install.packages("dismo", dependencies = TRUE)}
+library(dismo)
+if(!require(ResourceSelection)){install.packages("ResourceSelection", dependencies = TRUE)}
+library(ResourceSelection)
+if(!require(SDMPlay)){install.packages("SDMPlay", dependencies = TRUE)}
+library(SDMPlay)
+if(!require(spatstat)){install.packages("spatstat", dependencies = TRUE)}
+library(spatstat)
+if(!require(openxlsx)){install.packages("openxlsx", dependencies = TRUE)}
+library(openxlsx)
+if(!require(spatialEco)){install.packages("spatialEco", dependencies = TRUE)}
+library(spatialEco)
+if(!require(pROC)){install.packages("pROC", dependencies = TRUE)}
+library(pROC)
+if(!require(randomForest)){install.packages("randomForest", dependencies = TRUE)}
+library(randomForest)
+if(!require(boot)){install.packages("boot", dependencies = TRUE)}
+library(boot)
+if(!require(Hmisc)){install.packages("Hmisc", dependencies = TRUE)}
+library(Hmisc)
+if(!require(verification)){install.packages("verification", dependencies = TRUE)}
+library(verification)
+if(!require(pdp)){install.packages("pdp", dependencies = TRUE)}
+library(pdp)
+if(!require(caret)){install.packages("caret", dependencies = TRUE)}
+library(caret)
+if(!require(ROCR)){install.packages("ROCR", dependencies = TRUE)}
+library(ROCR)
+#if(!require(TSS)){install.packages("TSS", dependencies = TRUE)}
+#library(TSS)
+if(!require(openxlsx)){install.packages("openxlsx", dependencies = TRUE)}
+library(openxlsx)
+if(!require(landscapetools)){install.packages("landscapetools", dependencies = TRUE)}
+library(landscapetools)
+if(!require(sf)){install.packages("sf", dependencies = TRUE)}
+library(sf)
+if(!require(purrr)){install.packages("purrr", dependencies = TRUE)}
+library(purrr)
+if(!require(reshape2)){install.packages("reshape2", dependencies = TRUE)}
+library(reshape2)
+if(!require(lmPerm)){install.packages("lmPerm", dependencies = TRUE)}
+library(lmPerm)
+#if(!require(rstatix)){install.packages("rstatix", dependencies = TRUE)}
+#library(rstatix)
+if(!require(spdep)){install.packages("spdep", dependencies = TRUE)}
+library(spdep)
+#if(!require(SDMTools)){install.packages("SDMTools", dependencies = TRUE)}
+#library(SDMTools)
+```
+```{r}
+install.packages("INLA", repos=c(getOption("repos"), INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+remotes::install_github("gfalbery/ggregplot")
+install.packages("R.utils")
+install.packages("SDMTools","http://rforge.net/",type="source")
+install.packages("remotes")
+remotes::install_github("cghaase/GARPTools")
+
+packages = c("nlme","MASS", "MuMIn", "lme4", "usdm", "ggplot2", "lattice", "car", "MCMCglmm",
+             "vegan", "grid", "ggrepel", "ggpubr", "snow", "parallel", "landscapemetrics",
+             "raster", "rgdal", "GARPTools", "maps", "sp", "rgeos", "maptools", "mapdata",
+             "gbm", "dismo", "ResourceSelection", "dplyr", "tidyverse", "SDMPlay", "spatstat", "xlsx",
+             "spatialEco", "pROC", "randomForest", "boot", "Hmisc", "verification", "pdp", "caret", "ROCR", "TSS",
+             "openxlsx", "landscapetools", "sf", "purrr", "reshape2", "rstatix", "lmPerm", "INLA", "ggregplot", "spdep")
+```
+
+## Now load or install&load all
+package.check <- lapply(
+  packages,
+  FUN = function(x) {
+    if (!require(x, character.only = TRUE)) {
+      install.packages(x, dependencies = TRUE)
+      library(x, character.only = TRUE)
+    }
+  }
+)
+
+#Call in the data------
+lm <- read.csv("C:/Users/West Liberty U/Desktop/Garrett_Hoover/Garrett_Hoover_thesis_documents/lm.csv")
+na.omit(lm)
+attach(lm)
+
+#Multicollinearity------- 
+test <- data.frame(scale(temp), scale(turb), scale(do), scale(ph), scale(cond), scale(orp), scale(cl), 
+                      scale(percent_dev), scale(percent_forest), scale(percent_ag), scale(percent_dev_riparian), scale(percent_forest_riparian),
+                      scale(percent_ag_riparian), scale(watershed_area), scale(ohqhei), scale(pawqnha))
+test_1 <- vifstep(test, th = 10)
+test_1
+
+test_x <- data.frame(scale(temp), scale(turb), scale(do), scale(ph), scale(cond), scale(orp), scale(cl), 
+                      scale(percent_dev), scale(percent_ag), scale(percent_dev_riparian),
+                      scale(percent_ag_riparian), scale(watershed_area), scale(ohqhei), scale(pawqnha))
+test_x1 <- vifstep(test_x, th = 10)
+test_x1
+
+#Produces Function for INLA models-------
+f1 = ibi ~ scale(turb) + scale(do) + scale(ph) + scale(cond) + scale(orp) + scale(cl) + scale(percent_dev) +
+scale(percent_ag) + scale(percent_dev_riparian) + scale(percent_ag_riparian) + scale(ohqhei) + f(site, model = "iid")
+
+fx = ibi ~ scale(turb) + scale(do) + scale(ph) + scale(cond) + scale(orp) + scale(cl) + scale(percent_dev) +
+scale(percent_ag) + scale(percent_dev_riparian) + scale(percent_ag_riparian) + scale(ohqhei)
+
+inla_cul_model <- inla(f1, family = "gaussian", control.compute = list(dic = TRUE), data = lm)
+summary(inla_cul_model)
+
+inla_cul_model_x <- inla(fx, family = "gaussian", control.compute = list(dic = TRUE), data = lm)
+summary(inla_cul_model_x)
+#Produces caterpillar plot for parameter effect sizes (ggregplot) 
+Efxplot(list(inla_cul_model))
+
+#Variable reduction function I adjusted from the ggregplot package---------
+INLAModelSel_sc <- function(Response, Explanatory, Random = NULL, RandomModel = NULL, Family, Data, Delta = 2){
+  
+  require(INLA); require(ggplot2)
+  
+  Explanatory2 <- paste(Explanatory, collapse = " + ")
+  
+  if(!is.null(Random)){
+    Random2 <- paste(paste0("f(",Random, ", model = '", RandomModel, "')"), collapse = " + ")
+    
+    f1 <- as.formula(paste0(Response, " ~ ", paste(Explanatory2, " + ", Random2, collapse = " + ")))
+  }else{
+    f1 <- as.formula(paste0(Response, " ~ ", paste(Explanatory2, collapse = " + ")))
+  }
+  
+  FullModel <-   inla(f1,
+                      family = Family,
+                      data = Data,
+                      scale = TRUE,
+                      verbose = TRUE,
+                      control.compute = list(dic = TRUE))
+  
+  ModelList <- AllModelList <- RemovedList <- FullFormulaList <- FormulaList <- list()
+  DICList <- dDICList <- list()
+  
+  DICList[[1]] <- FullModel$dic$dic
+  FullFormulaList[[1]] <- f1
+  
+  
+  for(x in 1:length(Explanatory)){
+    
+    Explanatory3 <- paste(Explanatory[-x], collapse = " + ")
+    
+    if(!is.null(Random)){
+      
+      f2 <- as.formula(paste0(Response, " ~ ", paste(Explanatory3, " + ", Random2, collapse = " + ")))
+    } else{
+      f2 <- as.formula(paste0(Response, " ~ ", paste(Explanatory3, collapse = " + ")))
+      
+    }
+    
+    Model1 <- inla(f2,
+                   family = Family,
+                   data = Data,
+                   scale = TRUE,
+                   verbose = TRUE,
+                   control.compute = list(dic = TRUE))
+    
+    ModelList[[x]] <- Model1
+    
+    FormulaList[[x]] <- f2
+    
+  }
+  
+  DICList[[2]] <- sapply(ModelList, function(y) y$dic$dic)
+  names(DICList[[2]]) <- Explanatory
+  dDICList[[1]] <- DICList[[2]] - DICList[[1]]
+  names(dDICList[[1]]) <- Explanatory
+  RemovedList[[1]] <- Explanatory
+  
+  FullFormulaList[[2]] <- FormulaList
+  
+  AllModelList[[1]] <- FullModel
+  AllModelList[[2]] <- ModelList
+  
+  NewExplanatory <- Explanatory
+  
+  while(min(dDICList[[length(dDICList)]]) < Delta&length(NewExplanatory)>0){
+    
+    print(paste("Losing", names(dDICList[[length(dDICList)]])[which(dDICList[[length(dDICList)]] == min(dDICList[[length(dDICList)]]))]))
+    print(Text <- paste("Run", length(DICList)))
+    
+    ModelList <- FormulaList <- list()
+    
+    NewExplanatory <- NewExplanatory[-which(dDICList[[length(dDICList)]]==min(dDICList[[length(dDICList)]]))]
+    
+    if(length(NewExplanatory) > 0){
+      for(x in 1:length(NewExplanatory)){
+        
+        Explanatory3 <- paste(NewExplanatory[-x], collapse = " + ")
+        
+        if(!is.null(Random)){
+          
+          f2 <- as.formula(paste0(Response, " ~ ", paste(Explanatory3, " + ", Random2, collapse = " + ")))
+        } else{
+          f2 <- as.formula(paste0(Response, " ~ ", paste(Explanatory3, collapse = " + ")))
+          
+        }
+        
+        Model1 <- inla(f2,
+                       family = Family,
+                       data = Data,
+                       scale = TRUE,
+                       verbose = TRUE,
+                       control.compute = list(dic = TRUE))
+        
+        ModelList[[x]] <- Model1
+        
+        FormulaList[[x]] <- f2
+        
+      }
+      
+    }else{
+      
+      if(!is.null(Random)){
+        
+        f2 <- as.formula(paste0(Response, " ~ ", paste(Explanatory3, " + ", Random2, collapse = " + ")))
+      } else{
+        f2 <- as.formula(paste0(Response, " ~ ", paste(Explanatory3, collapse = " + ")))
+        
+      }
+      
+      Model1 <- inla(f2,
+                     family = Family,
+                     data = Data,
+                     scale = TRUE,
+                     verbose = TRUE,
+                     control.compute = list(dic = TRUE))
+      
+      ModelList[[x]] <- Model1
+      
+      FormulaList[[x]] <- f2
+      
+    }
+    
+    AllModelList[[length(AllModelList)+1]] <- ModelList
+    FullFormulaList[[length(FullFormulaList)+1]] <- FormulaList
+    
+    DICList[[length(DICList)+1]] <- sapply(ModelList, function(y) y$dic$dic)
+    names(DICList[[length(DICList)]]) <- NewExplanatory
+    dDICList[[length(dDICList)+1]] <- DICList[[length(DICList)]] - min(DICList[[length(DICList)-1]])
+    names(dDICList[[length(dDICList)]]) <- NewExplanatory
+    
+    RemovedList[[length(RemovedList)+1]] <- NewExplanatory
+    
+  }
+  
+  FinalModel <- AllModelList[[length(AllModelList)-1]][[which(dDICList[[length(dDICList)-1]]==min(dDICList[[length(dDICList)-1]]))]]
+  FinalFormula <- FullFormulaList[[length(AllModelList)-1]][[which(dDICList[[length(dDICList)-1]]==min(dDICList[[length(dDICList)-1]]))]]
+  
+  return(list(FinalModel = FinalModel,
+              AllModels = AllModelList,
+              Removed = RemovedList,
+              DIC = DICList,
+              dDIC = dDICList,
+              FormulaList = FullFormulaList,
+              FinalFormula = FinalFormula))
+}
+
+#All variables used in your first model
+covar <- c("turb", "do", "ph", "cond", "orp", "cl", "percent_dev", "percent_ag", "percent_dev_riparian", "percent_ag_riparian", "ohqhei")
+
+resp <- "ibi"
+
+inla_cul_model_sel <- INLAModelSel_sc(resp, covar, Random = "site", RandomModel = "iid", Family = "gaussian",  Data = lm)
+
+#Shows variables removed from all variables
+f_covar <- inla_cul_model_sel$Removed[[length(inla_cul_model_sel$Removed)]]
+f_covar
+#New models using the reduced variable amount-------
+#Create function combinations of all models with and without the grouping factor (f(farm, model = "iid"))
+
+f2 = ibi ~ scale(turb) + scale(ph) + scale(cond) + scale(percent_dev) + scale(percent_ag) + scale(percent_dev_riparian) + scale(percent_dev_riparian) +
+f(site, model = "iid")
+#f3 = EHDV_Farm_ ~ scale() +
+
+#full model with random
+test2 <- inla(f2, family = "gaussian", control.compute = list(dic = TRUE), data = lm)
+summary(test2)
+Efxplot(list(test2))
+
+#reduced model with random
+test3 <- inla(f3, family = "gaussian", control.compute = list(dic = TRUE), data = l_m_nb_col)
+summary(test3)
+Efxplot(list(test3))
+
+
+Model_list <- list(inla_cul_model, test2, test3)
+sapply(Model_list, function(f) f$dic$dic)
+#Compares dic values between the different models
+INLADICFig(Model_list, ModelNames = c("Full_Ran", "Red_Ran", "Red_wo_Ran"))
+
+
+```
