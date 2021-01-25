@@ -1,0 +1,294 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup}
+if(!require(knitr)){install.packages("knitr", dependencies = TRUE)}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir = "C:/Users/garre/Desktop/Thesis documents")
+getwd()
+setwd("C:/Users/garre/Desktop/Thesis documents")
+
+if(!require(ggplot2)){install.packages("ggplot2", dependencies = TRUE)}
+library(ggplot2)
+if(!require(dplyr)){install.packages("dplyr", dependencies = TRUE)}
+library(dplyr)
+if(!require(anytime)){install.packages("anytime", dependencies = TRUE)}
+library(anytime)
+if(!require(gridExtra)){install.packages("gridExtra", dependencies = TRUE)}
+library(gridExtra)
+```
+
+```{r}
+bc2_temp_thresholds <- read.csv("bc2_temp_thresholds.csv")
+                                                              
+bc2_temp_thresholds$Site <- factor(bc2_temp_thresholds$Site, levels = c("Brush Run 2", "Dutch Fork 3", "E Branch Buffalo Creek",
+                                                                        "Sugarcamp Run", "W Branch Buffalo Creek", "UNT to Dutch Fork 2", "Warm Water Fisheries"))
+
+bc2_temp_thresholds$date <- as.Date(anydate(bc2_temp_thresholds$date))
+
+ggplot(data = bc2_temp_thresholds, aes(x = date, y = temp, group = Site, 
+                                   color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() +
+  geom_line(aes(size = Site)) +
+  scale_size_manual(values = c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 2)) + 
+  labs(x = "Date", y = "Temperature (°C)") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12, hjust= 0.8), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+```
+```{r}
+bc2do <- read.csv("bc2do.csv")
+
+bc2do$Site <- factor(bc2do$Site, levels = c("Brush Run 2", "Dutch Fork 3", "E Branch Buffalo Creek", 
+                                            "Sugarcamp Run", "W Branch Buffalo Creek", "UNT to Dutch Fork 2", "Warm Water Fisheries"))
+
+bc2do$date <- as.Date(anydate(bc2do$date))
+
+ggplot(data = bc2do, aes(x = date, y = do, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  geom_line(aes(size = Site)) +
+  scale_size_manual(values = c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 2)) +
+  labs(x = "Date", y = "Dissolved O₂ (mg/L)") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12, hjust= 0.8), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+```
+```{r}
+
+bc2cl <- read.csv("bc2cl.csv")
+
+bc2cl$date <- as.Date(anydate(bc2cl$date))
+
+bc2cl$Site <- factor(bc2cl$Site, levels = c("Brush Run 2", "Dutch Fork 3", "E Branch Buffalo Creek",
+                                        "Sugarcamp Run", "W Branch Buffalo Creek", "UNT to Dutch Fork 2", "Chronic exposure threshold")) 
+
+ggplot(data = bc2cl, aes(x = date, y = cl, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  geom_line(aes(size = Site)) +
+  scale_size_manual(values = c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 2)) +
+  labs(x = "Date", y = "[Chloride] (mg/L)") + 
+  theme_classic() +
+  #scale_color_grey()+
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        #panel.grid.major = element_blank(), 
+        #panel.grid.minor = element_blank(),
+        legend.position = "top",
+        text = element_text(family = "serif"))
+```
+```{r}
+bc2 <- read.csv("bc2.csv")
+
+bc2$date <- as.Date(anydate(bc2$date))
+
+bc2$Site <- factor(bc2$Site, levels = c("Brush Run 2", "Dutch Fork 3", "E Branch Buffalo Creek",
+                                        "Sugarcamp Run", "W Branch Buffalo Creek", "UNT to Dutch Fork 2"))                 
+
+ggplot(data = bc2, aes(x = date, y = turb, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  labs(x = "Date", y = "Turbidity (NTU)") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12, hjust= 0.8), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+
+##pH plot
+ggplot(data = bc2, aes(x = date, y = ph, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  labs(x = "Date", y = "pH") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12, hjust= 0.8), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+
+##Conductivity plot
+ggplot(data = bc2, aes(x = date, y = cond, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  labs(x = "Date", y = "Specific Conductance (μS/cm)") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12, hjust= 0.8), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+
+ggplot(data = bc2, aes(x = date, y = orp, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  labs(x = "Date", y = "Oxidation-Reduction Potential (mV)") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12, hjust= 0.8), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+```
+```{r}
+df_temp_thresholds2 <- read.csv("df_temp_thresholds2.csv")
+                                                              
+df_temp_thresholds2$Site <- factor(df_temp_thresholds2$Site, levels = c("Polen Run", "N Fork Dunkard Fork", "Kent Run", "N Fork Dunkard Fork 2", 
+                                                                      "Trout Stocked Fisheries", "N Fork Dunkard Fork 3"))
+                                                                      
+df_temp_thresholds2$date <- as.Date(anydate(df_temp_thresholds2$date))
+
+ggplot(data = df_temp_thresholds2, aes(x = date, y = temp, group = Site, 
+                                   color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() +
+  geom_line(aes(size = Site)) +
+  scale_size_manual(values = c(0.5, 0.5, 0.5, 0.5, 2, 0.5)) + 
+  labs(x = "Date", y = "Temperature (°C)") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+```
+```{r}
+dfdo2 <- read.csv("dfdo2.csv")
+
+dfdo2$Site <- factor(dfdo2$Site, levels = c("Polen Run", "N Fork Dunkard Fork", "Kent Run", "N Fork Dunkard Fork 2", "Trout Stocked Fisheries", "N Fork Dunkard Fork 3")) 
+
+dfdo2$date <- as.Date(anydate(dfdo2$date))
+
+ggplot(data = dfdo2, aes(x = date, y = do, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  geom_line(aes(size = Site)) +
+  scale_size_manual(values = c(0.5, 0.5, 0.5, 0.5, 2, 0.5)) +
+  labs(x = "Date", y = "Dissolved O₂ (mg/L)") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+```
+```{r}
+df2 <- read.csv("df2.csv")
+
+df2$date <- as.Date(anydate(df2$date))
+
+df2Site <- factor(df2$Site, levels = c("Polen Run", "Kent Run", "N Fork Dunkard Fork", "N Fork Dunkard Fork 2", "N Fork Dunkard Fork 3")) 
+
+##Turbidity plot
+ggplot(data = df2, aes(x = date, y = turb, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  labs(x = "Date", y = "Turbidity (NTU)") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+
+#pH plot
+ggplot(data = df2, aes(x = date,y = ph, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  labs(x = "Date", y = "pH") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+
+#Conductivity plot
+ggplot(data = df2, aes(x = date,y = cond, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  labs(x = "Date", y = "Specific Conductance (μS/cm)") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+
+#OPR Plot
+ggplot(data = df2, aes(x = date, y = orp, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  labs(x = "Date", y = "Oxidation-Reduction Potential (mV)") + 
+  theme_classic() +
+  #scale_color_grey()+
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        #panel.grid.major = element_blank(), 
+        #panel.grid.minor = element_blank(),
+        legend.position = "top",
+        text = element_text(family = "serif"))
+```
+```{r}
+dfcl2 <- read.csv("dfcl2.csv")
+
+dfcl2$Site <- factor(dfcl2$Site, levels = c("Polen Run", "Kent Run", "N Fork Dunkard Fork", "N Fork Dunkard Fork 2", "N Fork Dunkard Fork 3", "Chronic exposure threshold"))
+
+dfcl2$date <- as.Date(anydate(dfcl2$date))
+
+## Chloride plot
+ggplot(data = dfcl2 , aes(x = date, y = cl, group = Site, color = Site)) + 
+  geom_point(size = 2.5) +
+  geom_line() + 
+  geom_line(aes(size = Site)) +
+  scale_size_manual(values = c(0.5, 0.5, 0.5, 0.5, 0.5, 2)) +
+  labs(x = "Date", y = "[Chloride] (mg/L)") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16),
+        axis.text.x = element_text(size = 12, hjust= 0.8),
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.position = "top",
+        text = element_text(family = "serif"))
+```
